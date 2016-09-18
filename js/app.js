@@ -1,20 +1,35 @@
+"use strict";
+// general variables
+var playerStartPosX = 201;
+var playerStartPosY = 384;
+var enemyStartPositionsY = [60, 143, 226];
+var enemyStartPositionX = -101;
+
+var GraphicalObject = function(x, y) {
+    this.x = x;
+    this.y = y;
+}
+
 // Enemies our player must avoid
-var Enemy = function() {
+var Enemy = function(x, y) {
+    // calls the superclass GraphicalObject with the fixed start position for x and and a random position from the array for y
+    GraphicalObject.call(this,
+        enemyStartPositionX,
+        enemyStartPositionsY[getRandomArbitrary(0,2)]);
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
 
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
     this.sprite = 'images/enemy-bug.png';
-    // possible positions for the enemies on the y-axis
-    this.yPositions = [60, 143, 226];
-    this.xStartPosition = -101;
+    // position when enemy reacher the end of the canvas
     this.xEndPosition = 510;
-
+    // random speed of the
     this.speed = getRandomArbitrary(100,400);
-    this.y = this.yPositions[getRandomArbitrary(0,2)];
-    this.x = this.xStartPosition;
 };
+
+Enemy.prototype = Object.create(GraphicalObject.prototype);
+Enemy.prototype.constructor = Enemy;
 
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
@@ -26,8 +41,8 @@ Enemy.prototype.update = function(dt) {
         this.x = this.x + this.speed*dt;
     } else {
         this.speed = getRandomArbitrary(100,400);
-        this.y = this.yPositions[getRandomArbitrary(0,2)];
-        this.x = this.xStartPosition;
+        this.y = enemyStartPositionsY[getRandomArbitrary(0,2)];
+        this.x = enemyStartPositionX;
     }
 };
 
@@ -43,10 +58,10 @@ Enemy.prototype.render = function() {
 // a handleInput() method.
 
 // our player
-var Player = function() {
+var Player = function(x, y) {
+    GraphicalObject.call(this, playerStartPosX, playerStartPosY);
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
-    //this.sprite = Resources.get(chosenAvatarSrc);
     this.sprite = "images/char-boy.png";
     this.playerWasChosen = false;
     // outmost possible positions for the player
@@ -54,16 +69,14 @@ var Player = function() {
     this.outmostRight = 403;
     this.outmostBottom = 384;
     this.outmostTop = -26;
-    // start positions for the player
-    this.xStartPosition = 201;
-    this.yStartPosition = 384;
     // radius to check a collision
     this.collisionRadius = 35;
-    // sets player to the start position
-    this.x = this.xStartPosition; //100+101;
-    this.y = this.yStartPosition; //302+82;
+    // starting score
     this.score = 0;
 };
+
+Player.prototype = Object.create(GraphicalObject.prototype);
+Player.prototype.constructor = Player;
 
 // checks a collision with an enemy
 Player.prototype.update = function() {
@@ -71,14 +84,14 @@ Player.prototype.update = function() {
         // save positions of enemy and player
         var enemyX = allEnemies[i].x;
         var enemyY = allEnemies[i].y;
-        var playerX = player.x;
-        var playerY = player.y;
+        var playerX = this.x;
+        var playerY = this.y;
         // check if a collision happens
-        if (Math.abs(enemyX - playerX) < player.collisionRadius &&
-            Math.abs(enemyY - playerY) < player.collisionRadius) {
-            player.x = player.xStartPosition;
-            player.y = player.yStartPosition;
-            player.score = 0;
+        if (Math.abs(enemyX - playerX) < this.collisionRadius &&
+            Math.abs(enemyY - playerY) < this.collisionRadius) {
+            this.x = playerStartPosX;
+            this.y = playerStartPosY;
+            this.score = 0;
             break;
         }
     }
@@ -111,8 +124,8 @@ Player.prototype.handleInput = function(key) {
             this.y -= 82;
             // if the player reaches the water
             if (this.y === this.outmostTop) {
-                this.y = this.yStartPosition;
-                this.x = this.xStartPosition;
+                this.y = playerStartPosY;
+                this.x = playerStartPosX;
                 this.score += 1;
             }
         };
@@ -131,7 +144,7 @@ function getRandomArbitrary(min, max) {
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
-var allEnemies = [new Enemy(), new Enemy(), new Enemy()];
+var allEnemies = [ new Enemy(), new Enemy(), new Enemy() ];
 var player = new Player();
 
 
@@ -182,7 +195,7 @@ var avatarChosen = function(event) {
         } else if (x >= 404 && x < 505) {
              player.sprite = "images/char-princess-girl.png";
         }
-        canvas.removeEventListener("mousedown", arguments.callee, false);
+        canvas.removeEventListener("mousedown", avatarChosen, false);
         player.playerWasChosen = true;
     }
 };
